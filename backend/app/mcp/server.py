@@ -1,7 +1,10 @@
-import asyncio
 from collections.abc import Callable
 
 from mcp.server.fastmcp import FastMCP
+from pydantic import Field
+from sqlmodel import Session
+
+from app.core.db import engine
 
 mcp = FastMCP("OpenAstra - MCP gateway for third party APIs")
 
@@ -13,31 +16,38 @@ def echo_resource(message: str) -> str:
 
 
 @mcp.tool()
-def echo_tool(message: str) -> str:
+def echo_tool(
+    message: str,
+    message2=Field(default=None, description="Optional title", title="Optional title"),
+) -> str:
     """Echo a message as a tool"""
-    return f"Tool echo: {message}"
+    return f"Tool echo: {message} {message2}"
 
 
-@mcp.prompt()
-def echo_prompt(message: str) -> str:
-    """Create an echo prompt"""
-    return f"Please process this message: {message}"
+@mcp.tool()
+def greet(
+    name: str = Field(description="The name to greet"),
+    title: str = Field(description="Optional title", default=""),
+) -> str:
+    """A greeting tool"""
+    return f"Hello {title} {name}"
 
 
 # Define example tools WITHOUT decorators - these will be loaded dynamically
-def addition_tool(a: int, b: int) -> int:
+def addition_tool(a: int, b=None) -> int:
     """Add two numbers together"""
+    # Handle the None case
+    if b is None:
+        return a
     return a + b
-
-
-def concatenate_tool(text1: str, text2: str) -> str:
-    """Concatenate two strings"""
-    return f"{text1} {text2}"
 
 
 # Register dynamic tools at startup
 # This ensures tools are available when the MCP client connects
-tools_to_load = [addition_tool, concatenate_tool]
+tools_to_load = [
+    addition_tool,
+    # schema_to_function(github_schema["tool_schema"], github_schema["tool_metadata"]),
+]
 
 for func in tools_to_load:
     decorated_func = mcp.tool()(func)
@@ -45,7 +55,7 @@ for func in tools_to_load:
 
 
 # For more advanced dynamic loading (if needed later)
-def register_dynamic_tool(func: Callable) -> Callable:
+def register_tool(func: Callable) -> Callable:
     """Register a function as a tool at runtime"""
     decorated_func = mcp.tool()(func)
     print(f"Dynamically registered tool: {func.__name__}")
@@ -53,15 +63,28 @@ def register_dynamic_tool(func: Callable) -> Callable:
 
 
 # Add async function to delete tool after delay
-async def delete_tool_after_delay(tool_name: str, delay: float) -> None:
+def deregister_tool(tool_name: str) -> None:
     """Delete a tool after specified delay in seconds"""
-    await asyncio.sleep(delay)
     if tool_name in mcp._tool_manager._tools:
         del mcp._tool_manager._tools[tool_name]
         print(f"Deleted tool: {tool_name}")
 
 
-# Schedule tool deletion
-asyncio.create_task(delete_tool_after_delay("concatenate_tool", 10.0))
+# Function to load active tool instances
+def load_active_tool_instances() -> None:
+    """Load and register all active tool instances from the database."""
+    try:
+        with Session(engine) as session:
+            # Import here to avoid circular imports
+            from app.services.tool_registration import ToolRegistrationService
 
-print(mcp._tool_manager._tools)
+            print("Loading active tool instances from database...")
+            ToolRegistrationService.load_active_tool_instances(session)
+    except ImportError as e:
+        print(f"Warning: Could not load active tool instances: {e}")
+    except Exception as e:
+        print(f"Error loading active tool instances: {e}")
+
+
+# Load active tool instances when this module is imported
+load_active_tool_instances()

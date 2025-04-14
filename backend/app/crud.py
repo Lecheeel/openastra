@@ -1,3 +1,5 @@
+import random
+import string
 from typing import Any
 
 from sqlmodel import Session, select
@@ -16,6 +18,10 @@ from app.models import (
     TeamInvitationStatus,
     TeamMember,
     TeamRole,
+    ToolDefinition,
+    ToolDefinitionCreate,
+    ToolInstance,
+    ToolInstanceCreate,
     User,
     UserCreate,
     UserUpdate,
@@ -117,3 +123,29 @@ def create_project(*, session: Session, project_create: ProjectCreate) -> Projec
     session.commit()
     session.refresh(db_project)
     return db_project
+
+
+def create_tool_definition(
+    session: Session, *, tool_definition: ToolDefinition | ToolDefinitionCreate
+) -> ToolDefinition:
+    """Create a new tool definition."""
+    db_obj = ToolDefinition.model_validate(tool_definition)
+    session.add(db_obj)
+    session.commit()
+    session.refresh(db_obj)
+    return db_obj
+
+
+def create_tool_instance(
+    session: Session, *, tool_instance: ToolInstance | ToolInstanceCreate
+) -> ToolInstance:
+    """Create a new tool instance."""
+    db_obj = ToolInstance.model_validate(tool_instance)
+    session.add(db_obj)
+    session.commit()
+    session.refresh(db_obj)
+    return db_obj
+
+
+def random_lower_string() -> str:
+    return "".join(random.choices(string.ascii_lowercase, k=32))

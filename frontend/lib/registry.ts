@@ -12,7 +12,7 @@ import {
   siCalendly,
 } from 'simple-icons';
 
-export interface IntegrationMetadata {
+export interface AppMetadata {
   id: string;
   name: string;
   description: string;
@@ -31,16 +31,16 @@ export interface IntegrationMetadata {
   tags: string[];
 }
 
-export const integrationRegistry: Record<string, IntegrationMetadata> = {
+export const appRegistry: Record<string, AppMetadata> = {
   gmail: {
     id: 'gmail',
     name: 'Gmail',
     description: 'Connect to Gmail to send and manage emails.',
     icon: siGmail,
-    category: 'communication',
+    category: 'Communication',
     authMethods: ['oauth2', 'bearer'],
     apiEndpointCount: 17,
-    docsUrl: 'https://developers.google.com/gmail/api',
+    docsUrl: 'https://gmail.googleapis.com/$discovery/rest?version=v1',
     features: [
       'Send emails',
       'Read inbox',
@@ -59,7 +59,8 @@ export const integrationRegistry: Record<string, IntegrationMetadata> = {
     category: 'Development',
     authMethods: ['oauth2', 'bearer'],
     apiEndpointCount: 324,
-    docsUrl: 'https://docs.github.com/en/rest',
+    docsUrl:
+      'https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.json',
     features: [
       'Repository management',
       'Issue tracking',
@@ -77,7 +78,8 @@ export const integrationRegistry: Record<string, IntegrationMetadata> = {
     category: 'Communication',
     authMethods: ['oauth2', 'bearer'],
     apiEndpointCount: 125,
-    docsUrl: 'https://api.slack.com/',
+    docsUrl:
+      'https://raw.githubusercontent.com/slackapi/slack-api-specs/master/web-api/slack_web_openapi_v2.json',
     features: [
       'Send messages',
       'Create channels',
@@ -170,19 +172,17 @@ export const categories = {
   },
 };
 
-export function getIntegrationsByCategory(category: string) {
-  return Object.values(integrationRegistry).filter(
-    (integration) => integration.category === category,
-  );
+export function getAppsByCategory(category: string) {
+  return Object.values(appRegistry).filter((app) => app.category === category);
 }
 
-export function searchIntegrations(query: string) {
+export function searchApps(query: string) {
   const searchTerm = query.toLowerCase();
-  return Object.values(integrationRegistry).filter(
-    (integration) =>
-      integration.name.toLowerCase().includes(searchTerm) ||
-      integration.description.toLowerCase().includes(searchTerm) ||
-      integration.tags.some((tag) => tag.toLowerCase().includes(searchTerm)),
+  return Object.values(appRegistry).filter(
+    (app) =>
+      app.name.toLowerCase().includes(searchTerm) ||
+      app.description.toLowerCase().includes(searchTerm) ||
+      app.tags.some((tag) => tag.toLowerCase().includes(searchTerm)),
   );
 }
 
@@ -195,3 +195,108 @@ export function getAuthMethodLabel(method: string): string {
   };
   return labels[method] || method;
 }
+
+export interface Tool {
+  appId: string;
+  name: string;
+  description: string;
+}
+
+export const tools: Tool[] = [
+  {
+    appId: 'gmail',
+    name: 'send_email',
+    description:
+      'Send an email to specified recipients with subject and body content',
+  },
+  {
+    appId: 'gmail',
+    name: 'search_emails',
+    description:
+      'Search through emails using specified criteria like subject, sender, or date range',
+  },
+  {
+    appId: 'gmail',
+    name: 'manage_labels',
+    description: 'Create, modify, or apply labels to organize emails',
+  },
+  {
+    appId: 'github',
+    name: 'create_issue',
+    description:
+      'Create a new issue in a specified repository with title and description',
+  },
+  {
+    appId: 'github',
+    name: 'get_pull_requests',
+    description:
+      'Retrieve pull requests for a repository with optional filtering',
+  },
+  {
+    appId: 'github',
+    name: 'list_repositories',
+    description:
+      'List repositories for a user or organization with specified criteria',
+  },
+  {
+    appId: 'slack',
+    name: 'post_message',
+    description: 'Send a message to a specified channel or user',
+  },
+  {
+    appId: 'slack',
+    name: 'create_channel',
+    description: 'Create a new channel with specified name and settings',
+  },
+  {
+    appId: 'slack',
+    name: 'invite_users',
+    description: 'Invite users to a specified channel or workspace',
+  },
+  {
+    appId: 'openai',
+    name: 'generate_completion',
+    description:
+      'Generate text completion using specified model and parameters',
+  },
+  {
+    appId: 'openai',
+    name: 'create_image',
+    description: 'Generate an image using DALL-E with specified parameters',
+  },
+  {
+    appId: 'openai',
+    name: 'create_embedding',
+    description: 'Generate embeddings for provided text content',
+  },
+  {
+    appId: 'dropbox',
+    name: 'upload_file',
+    description: 'Upload a file to a specified Dropbox path',
+  },
+  {
+    appId: 'dropbox',
+    name: 'share_file',
+    description: 'Create a sharing link for a file with specified permissions',
+  },
+  {
+    appId: 'dropbox',
+    name: 'list_folder',
+    description: 'List contents of a specified folder path',
+  },
+  {
+    appId: 'google_calendar',
+    name: 'create_event',
+    description: 'Create a calendar event with specified details and attendees',
+  },
+  {
+    appId: 'google_calendar',
+    name: 'list_events',
+    description: 'Retrieve calendar events within a specified time range',
+  },
+  {
+    appId: 'google_calendar',
+    name: 'update_event',
+    description: "Modify an existing calendar event's details",
+  },
+];
